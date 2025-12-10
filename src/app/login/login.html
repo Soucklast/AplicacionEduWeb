@@ -1,0 +1,154 @@
+<!-- login.html -->
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <h1 class="logo">CodeMentor</h1>
+      <p class="subtitle">Sistema de Aprendizaje</p>
+    </div>
+
+    <!-- Mensaje de error -->
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Formulario de Login -->
+    <form *ngIf="isLoginMode" [formGroup]="loginForm" (ngSubmit)="onLogin()" class="login-form">
+      <div class="form-group">
+        <label for="username">Email</label>
+        <div class="input-container">
+          <span class="input-icon">
+            <mat-icon>email</mat-icon>
+          </span>
+          <input
+            id="username"
+            type="email"
+            formControlName="username"
+            placeholder="tu@email.com"
+            [class.error]="loginUsername?.invalid && loginUsername?.touched"
+          >
+        </div>
+        <div *ngIf="loginUsername?.invalid && loginUsername?.touched" class="validation-error">
+          <small *ngIf="loginUsername?.errors?.['required']">El email es requerido</small>
+          <small *ngIf="loginUsername?.errors?.['email']">Formato de email inválido</small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Contraseña</label>
+        <div class="input-container">
+          <span class="input-icon">
+            <mat-icon>lock</mat-icon>
+          </span>
+          <input
+            id="password"
+            [type]="showLoginPassword ? 'text' : 'password'"
+            formControlName="password"
+            placeholder="Tu contraseña"
+            [class.error]="loginPassword?.invalid && loginPassword?.touched"
+          >
+          <button type="button" class="toggle-password" (click)="toggleLoginPassword()">
+            <mat-icon>{{ showLoginPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+        </div>
+        <div *ngIf="loginPassword?.invalid && loginPassword?.touched" class="validation-error">
+          <small *ngIf="loginPassword?.errors?.['required']">La contraseña es requerida</small>
+          <small *ngIf="loginPassword?.errors?.['minlength']">Mínimo 6 caracteres</small>
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        class="login-btn"
+        [disabled]="!loginForm.valid || isLoading"
+      >
+        <mat-icon>login</mat-icon>
+        <span *ngIf="!isLoading">Iniciar Sesión</span>
+        <span *ngIf="isLoading">Cargando...</span>
+      </button>
+    </form>
+
+    <!-- Formulario de Registro -->
+    <form *ngIf="!isLoginMode" [formGroup]="registerForm" (ngSubmit)="onRegister()" class="login-form">
+      <div class="form-group">
+        <label for="nombre">Nombre Completo</label>
+        <div class="input-container">
+          <span class="input-icon">
+            <mat-icon>person</mat-icon>
+          </span>
+          <input
+            id="nombre"
+            type="text"
+            formControlName="nombre"
+            placeholder="Tu nombre completo"
+            [class.error]="registerNombre?.invalid && registerNombre?.touched"
+          >
+        </div>
+        <div *ngIf="registerNombre?.invalid && registerNombre?.touched" class="validation-error">
+          <small *ngIf="registerNombre?.errors?.['required']">El nombre es requerido</small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="registerEmail">Email</label>
+        <div class="input-container">
+          <span class="input-icon">
+            <mat-icon>email</mat-icon>
+          </span>
+          <input
+            id="registerEmail"
+            type="email"
+            formControlName="email"
+            placeholder="tu@email.com"
+            [class.error]="registerEmail?.invalid && registerEmail?.touched"
+          >
+        </div>
+        <div *ngIf="registerEmail?.invalid && registerEmail?.touched" class="validation-error">
+          <small *ngIf="registerEmail?.errors?.['required']">El email es requerido</small>
+          <small *ngIf="registerEmail?.errors?.['email']">Formato de email inválido</small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="registerPassword">Contraseña</label>
+        <div class="input-container">
+          <span class="input-icon">
+            <mat-icon>lock</mat-icon>
+          </span>
+          <input
+            id="registerPassword"
+            [type]="showRegisterPassword ? 'text' : 'password'"
+            formControlName="password"
+            placeholder="Mínimo 6 caracteres"
+            [class.error]="registerPassword?.invalid && registerPassword?.touched"
+          >
+          <button type="button" class="toggle-password" (click)="toggleRegisterPassword()">
+            <mat-icon>{{ showRegisterPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+        </div>
+        <div *ngIf="registerPassword?.invalid && registerPassword?.touched" class="validation-error">
+          <small *ngIf="registerPassword?.errors?.['required']">La contraseña es requerida</small>
+          <small *ngIf="registerPassword?.errors?.['minlength']">Mínimo 6 caracteres</small>
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        class="login-btn"
+        [disabled]="!registerForm.valid || isLoading"
+      >
+        <mat-icon>person_add</mat-icon>
+        <span *ngIf="!isLoading">Registrarse</span>
+        <span *ngIf="isLoading">Cargando...</span>
+      </button>
+    </form>
+
+    <div class="switch-mode">
+      <p>
+        {{ isLoginMode ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?' }}
+        <a (click)="switchMode()" class="switch-link">
+          {{ isLoginMode ? 'Regístrate aquí' : 'Inicia sesión aquí' }}
+        </a>
+      </p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,538 @@
+<!-- Material Toolbar Header -->
+<mat-toolbar color="primary" class="dashboard-toolbar">
+  <div class="toolbar-content">
+    <div class="logo-section">
+      <mat-icon class="logo-icon">school</mat-icon>
+      <div class="logo-info">
+        <h1>CodeMentor</h1>
+        <span class="subtitle">Panel de Administración</span>
+      </div>
+    </div>
+    <span class="spacer"></span>
+    <div class="user-section">
+      <div class="user-profile">
+        <div class="user-avatar">
+          <mat-icon class="avatar-icon">admin_panel_settings</mat-icon>
+        </div>
+        <div class="user-info">
+          <span class="user-name">Administrador</span>
+          <span class="user-role">Panel de Control</span>
+        </div>
+      </div>
+      <div class="user-actions">
+        <button mat-icon-button matTooltip="Configuración" class="action-btn">
+          <mat-icon>settings</mat-icon>
+        </button>
+        <button mat-icon-button matTooltip="Notificaciones" class="action-btn">
+          <mat-icon>notifications</mat-icon>
+        </button>
+        <button mat-icon-button (click)="logout()" matTooltip="Cerrar sesión" class="logout-btn">
+          <mat-icon>logout</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+</mat-toolbar>
+
+<!-- Main content with Material Container -->
+<div class="dashboard-main">
+  
+  <!-- Welcome Section -->
+  <mat-card class="welcome-card" appearance="outlined">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>dashboard</mat-icon>
+      <mat-card-title>¡Bienvenido al Panel de Control!</mat-card-title>
+      <mat-card-subtitle>Gestiona el contenido educativo desde aquí</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <p>Selecciona una sección para comenzar a administrar materias, unidades, contenido y ejercicios</p>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Stats Section -->
+  <div class="stats-section">
+    <h2 class="section-title">Resumen del Sistema</h2>
+    <div class="stats-grid">
+      <mat-card class="stat-card materias-card" (click)="loadMaterias()">
+        <mat-card-header>
+          <mat-icon mat-card-avatar class="stat-icon">school</mat-icon>
+          <mat-card-title>{{ totalMaterias }}</mat-card-title>
+          <mat-card-subtitle>Materias</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-actions align="end">
+          <button mat-button color="primary">Ver todas</button>
+        </mat-card-actions>
+      </mat-card>
+      
+      <mat-card class="stat-card unidades-card" [class.disabled]="!selectedMateria">
+        <mat-card-header>
+          <mat-icon mat-card-avatar class="stat-icon">library_books</mat-icon>
+          <mat-card-title>{{ totalUnidades }}</mat-card-title>
+          <mat-card-subtitle>Unidades</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-actions align="end">
+          <button mat-button color="primary" [disabled]="!selectedMateria">Ver todas</button>
+        </mat-card-actions>
+      </mat-card>
+      
+      <mat-card class="stat-card contenido-card" [class.disabled]="!selectedUnidad">
+        <mat-card-header>
+          <mat-icon mat-card-avatar class="stat-icon">article</mat-icon>
+          <mat-card-title>{{ totalContenidos }}</mat-card-title>
+          <mat-card-subtitle>Contenidos</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-actions align="end">
+          <button mat-button color="primary" [disabled]="!selectedUnidad">Ver todos</button>
+        </mat-card-actions>
+      </mat-card>
+      
+      <mat-card class="stat-card ejercicios-card" [class.disabled]="!selectedUnidad">
+        <mat-card-header>
+          <mat-icon mat-card-avatar class="stat-icon">quiz</mat-icon>
+          <mat-card-title>{{ totalEjercicios }}</mat-card-title>
+          <mat-card-subtitle>Ejercicios</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-actions align="end">
+          <button mat-button color="primary" [disabled]="!selectedUnidad">Ver todos</button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- Materias Section -->
+  <div class="content-section" *ngIf="materias.length > 0">
+    <div class="section-header">
+      <h2 class="section-title">Materias Disponibles</h2>
+      <button mat-raised-button color="primary" (click)="showCreateMateriaForm()">
+        <mat-icon>add</mat-icon>
+        Nueva Materia
+      </button>
+    </div>
+    <div class="cards-grid">
+      <mat-card class="content-card materia-card" 
+                *ngFor="let materia of materias" 
+                (click)="selectMateria(materia)"
+                [class.selected]="selectedMateria?.id === materia.id">
+        <mat-card-header>
+          <mat-icon mat-card-avatar class="materia-icon">school</mat-icon>
+          <mat-card-title>{{ materia.nombre }}</mat-card-title>
+          <mat-card-subtitle>Orden: {{ materia.orden }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-actions align="end">
+          <button mat-button color="primary">Seleccionar</button>
+          <button mat-icon-button matTooltip="Editar materia" (click)="editMateria(materia); $event.stopPropagation()">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button matTooltip="Eliminar materia" color="warn" (click)="deleteMateria(materia); $event.stopPropagation()">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- No Unidades Message -->
+  <div class="content-section" *ngIf="selectedMateria && unidades.length === 0 && !isLoading">
+    <mat-card class="info-card">
+      <mat-card-content>
+        <div class="info-content">
+          <mat-icon class="info-icon">library_books_off</mat-icon>
+          <h3>No hay unidades disponibles</h3>
+          <p>La materia "{{ selectedMateria.nombre }}" aún no tiene unidades creadas</p>
+          <button mat-raised-button color="primary" (click)="showCreateUnidadForm()">
+            <mat-icon>add</mat-icon>
+            Crear primera unidad
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Unidades Section -->
+  <div class="content-section" *ngIf="selectedMateria && unidades.length > 0">
+    <div class="section-header">
+      <h2 class="section-title">Unidades de {{ selectedMateria.nombre }}</h2>
+      <button mat-raised-button color="primary" (click)="showCreateUnidadForm()">
+        <mat-icon>add</mat-icon>
+        Nueva Unidad
+      </button>
+    </div>
+    <div class="cards-grid">
+      <mat-card class="content-card unidad-card" 
+                *ngFor="let unidad of unidades" 
+                (click)="selectUnidad(unidad)"
+                [class.selected]="selectedUnidad?.numero === unidad.numero">
+        <mat-card-header>
+          <mat-icon mat-card-avatar class="unidad-icon">library_books</mat-icon>
+          <mat-card-title>Unidad {{ unidad.numero }}</mat-card-title>
+          <mat-card-subtitle>{{ unidad.titulo }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <p>{{ unidad.descripcion }}</p>
+        </mat-card-content>
+        <mat-card-actions align="end">
+          <button mat-button color="primary">Seleccionar</button>
+          <button mat-icon-button matTooltip="Editar unidad" (click)="editUnidad(unidad); $event.stopPropagation()">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button matTooltip="Eliminar unidad" color="warn" (click)="deleteUnidad(unidad); $event.stopPropagation()">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- No Contenidos Message -->
+  <div class="content-section" *ngIf="selectedUnidad && contenidos.length === 0 && !isLoading">
+    <mat-card class="info-card">
+      <mat-card-content>
+        <div class="info-content">
+          <mat-icon class="info-icon">article_off</mat-icon>
+          <h3>No hay contenidos disponibles</h3>
+          <p>La Unidad {{ selectedUnidad.numero }} aún no tiene contenidos creados</p>
+          <button mat-raised-button color="primary" (click)="showCreateContenidoForm()">
+            <mat-icon>add</mat-icon>
+            Crear primer contenido
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Contenidos Section -->
+  <div class="content-section" *ngIf="selectedUnidad && contenidos.length > 0">
+    <div class="section-header">
+      <h2 class="section-title">Contenidos de la Unidad {{ selectedUnidad.numero }}</h2>
+      <button mat-raised-button color="primary" (click)="showCreateContenidoForm()">
+        <mat-icon>add</mat-icon>
+        Nuevo Contenido
+      </button>
+    </div>
+    <div class="cards-grid">
+      <mat-card class="content-card contenido-card" *ngFor="let contenido of contenidos">
+        <mat-card-header>
+          <mat-icon mat-card-avatar class="contenido-icon">article</mat-icon>
+          <mat-card-title>{{ contenido.nombre_tema }}</mat-card-title>
+          <mat-card-subtitle>Tema {{ contenido.numero || 'S/N' }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <p *ngIf="contenido.descripcion">{{ contenido.descripcion }}</p>
+          <mat-chip-set>
+            <mat-chip>Markdown</mat-chip>
+          </mat-chip-set>
+        </mat-card-content>
+        <mat-card-actions align="end">
+          <button mat-button color="primary" (click)="verContenido(contenido)">
+            <mat-icon>visibility</mat-icon>
+            Ver
+          </button>
+          <button mat-icon-button matTooltip="Editar contenido" (click)="editarContenido(contenido)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button matTooltip="Eliminar contenido" color="warn" (click)="deleteContenido(contenido)">
+            <mat-icon>delete</mat-icon>
+          </button>
+          <button mat-icon-button matTooltip="Ver ejercicios" (click)="loadEjerciciosPorTema(contenido.tema_id || contenido.id)">
+            <mat-icon>quiz</mat-icon>
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- Ejercicios Section -->
+  <div class="content-section" *ngIf="selectedUnidad && ejercicios.length > 0">
+    <div class="section-header">
+      <h2 class="section-title">
+        Ejercicios de la Unidad {{ selectedUnidad.numero }}
+        <mat-chip class="count-chip">{{ totalEjercicios }}</mat-chip>
+      </h2>
+      <button mat-raised-button color="primary" (click)="showCreateEjercicioForm()">
+        <mat-icon>add</mat-icon>
+        Nuevo Ejercicio
+      </button>
+    </div>
+    <div class="cards-grid">
+      <mat-card class="content-card ejercicio-card" *ngFor="let ejercicio of ejercicios">
+        <mat-card-header>
+          <mat-icon mat-card-avatar class="ejercicio-icon">quiz</mat-icon>
+          <mat-card-title>{{ ejercicio.enunciado | slice:0:50 }}{{ ejercicio.enunciado?.length > 50 ? '...' : '' }}</mat-card-title>
+          <mat-card-subtitle>Tipo: {{ ejercicio.tipo || 'multiple_choice' }} | Dificultad: {{ ejercicio.dificultad || 'principiante' }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <p *ngIf="ejercicio.tema_id"><strong>Tema ID:</strong> {{ ejercicio.tema_id }}</p>
+          <mat-chip-set>
+            <mat-chip [color]="ejercicio.tipo === 'multiple_choice' ? 'primary' : 'accent'" selected>
+              {{ ejercicio.tipo || 'Evaluación' }}
+            </mat-chip>
+            <mat-chip [color]="ejercicio.dificultad === 'principiante' ? 'primary' : 'warn'">
+              {{ ejercicio.dificultad || 'Básico' }}
+            </mat-chip>
+          </mat-chip-set>
+        </mat-card-content>
+        <mat-card-actions align="end">
+          <button mat-button color="primary">
+            <mat-icon>play_arrow</mat-icon>
+            Ver
+          </button>
+          <button mat-icon-button matTooltip="Editar ejercicio" (click)="editEjercicio(ejercicio)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button matTooltip="Eliminar ejercicio" color="warn" (click)="deleteEjercicio(ejercicio)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- No Ejercicios Message -->
+  <div class="content-section" *ngIf="selectedUnidad && ejercicios.length === 0 && !isLoading">
+    <mat-card class="info-card">
+      <mat-card-content>
+        <div class="info-content">
+          <mat-icon class="info-icon">quiz_off</mat-icon>
+          <h3>No hay ejercicios disponibles</h3>
+          <p>Esta unidad aún no tiene ejercicios creados</p>
+          <button mat-raised-button color="primary" (click)="showCreateEjercicioForm()">
+            <mat-icon>add</mat-icon>
+            Crear ejercicio
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-section" *ngIf="isLoading">
+    <mat-card class="loading-card">
+      <mat-card-content>
+        <div class="loading-content">
+          <mat-spinner diameter="50"></mat-spinner>
+          <p>Cargando datos...</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-section" *ngIf="!isLoading && materias.length === 0">
+    <mat-card class="empty-card">
+      <mat-card-content>
+        <div class="empty-content">
+          <mat-icon class="empty-icon">school_off</mat-icon>
+          <h3>No hay materias disponibles</h3>
+          <p>Comienza creando tu primera materia</p>
+          <button mat-raised-button color="primary" (click)="showCreateMateriaForm()">
+            <mat-icon>add</mat-icon>
+            Crear materia
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+</div>
+
+  <!-- Formulario de Materia -->
+  <div class="form-overlay" *ngIf="showMateriaForm" (click)="cancelMateriaForm()">
+    <mat-card class="form-card" (click)="$event.stopPropagation()">
+      <mat-card-header>
+        <mat-card-title>{{ editingItem ? 'Editar' : 'Crear' }} Materia</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="materiaForm" (ngSubmit)="saveMateria()">
+          <mat-form-field class="full-width">
+            <mat-label>Nombre de la Materia</mat-label>
+            <input matInput formControlName="nombre" required>
+            <mat-error *ngIf="materiaForm.get('nombre')?.hasError('required')">
+              El nombre es requerido
+            </mat-error>
+          </mat-form-field>
+          
+          <mat-form-field class="full-width">
+            <mat-label>Orden</mat-label>
+            <input matInput type="number" formControlName="orden" required>
+            <mat-error *ngIf="materiaForm.get('orden')?.hasError('required')">
+              El orden es requerido
+            </mat-error>
+          </mat-form-field>
+        </form>
+      </mat-card-content>
+      <mat-card-actions align="end">
+        <button mat-button (click)="cancelMateriaForm()">Cancelar</button>
+        <button mat-raised-button color="primary" (click)="saveMateria()" [disabled]="!materiaForm.valid">
+          {{ editingItem ? 'Actualizar' : 'Crear' }}
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <!-- Formulario de Unidad -->
+  <div class="form-overlay" *ngIf="showUnidadForm" (click)="cancelUnidadForm()">
+    <mat-card class="form-card" (click)="$event.stopPropagation()">
+      <mat-card-header>
+        <mat-card-title>{{ editingItem ? 'Editar' : 'Crear' }} Unidad</mat-card-title>
+        <mat-card-subtitle *ngIf="selectedMateria">Para: {{ selectedMateria.nombre }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="unidadForm" (ngSubmit)="saveUnidad()">
+          <mat-form-field class="full-width">
+            <mat-label>Número de Unidad</mat-label>
+            <input matInput type="number" formControlName="numero" required>
+            <mat-error *ngIf="unidadForm.get('numero')?.hasError('required')">
+              El número es requerido
+            </mat-error>
+          </mat-form-field>
+          
+          <mat-form-field class="full-width">
+            <mat-label>Título</mat-label>
+            <input matInput formControlName="titulo" required>
+            <mat-error *ngIf="unidadForm.get('titulo')?.hasError('required')">
+              El título es requerido
+            </mat-error>
+          </mat-form-field>
+          
+          <mat-form-field class="full-width">
+            <mat-label>Descripción</mat-label>
+            <textarea matInput rows="3" formControlName="descripcion" required></textarea>
+            <mat-error *ngIf="unidadForm.get('descripcion')?.hasError('required')">
+              La descripción es requerida
+            </mat-error>
+          </mat-form-field>
+        </form>
+      </mat-card-content>
+      <mat-card-actions align="end">
+        <button mat-button (click)="cancelUnidadForm()">Cancelar</button>
+        <button mat-raised-button color="primary" (click)="saveUnidad()" [disabled]="!unidadForm.valid">
+          {{ editingItem ? 'Actualizar' : 'Crear' }}
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <!-- Formulario de Contenido -->
+  <div class="form-overlay" *ngIf="showContenidoForm" (click)="cancelContenidoForm()">
+    <mat-card class="form-card large" (click)="$event.stopPropagation()">
+      <mat-card-header>
+        <mat-card-title>{{ editingItem ? 'Editar' : 'Crear' }} Contenido</mat-card-title>
+        <mat-card-subtitle *ngIf="selectedUnidad">Para: Unidad {{ selectedUnidad.numero }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="contenidoForm" (ngSubmit)="saveContenido()">
+          <mat-form-field class="full-width">
+            <mat-label>ID del Tema</mat-label>
+            <input matInput formControlName="tema_id" required>
+            <mat-error *ngIf="contenidoForm.get('tema_id')?.hasError('required')">
+              El ID del tema es requerido
+            </mat-error>
+          </mat-form-field>
+          
+          <mat-form-field class="full-width">
+            <mat-label>Nombre del Tema</mat-label>
+            <input matInput formControlName="nombre_tema" required>
+            <mat-error *ngIf="contenidoForm.get('nombre_tema')?.hasError('required')">
+              El nombre del tema es requerido
+            </mat-error>
+          </mat-form-field>
+          
+          <mat-form-field class="full-width">
+            <mat-label>Número</mat-label>
+            <input matInput type="number" formControlName="numero" required>
+            <mat-error *ngIf="contenidoForm.get('numero')?.hasError('required')">
+              El número es requerido
+            </mat-error>
+          </mat-form-field>
+          
+          <mat-form-field class="full-width">
+            <mat-label>Descripción</mat-label>
+            <textarea matInput rows="2" formControlName="descripcion"></textarea>
+          </mat-form-field>
+          
+          <mat-form-field class="full-width">
+            <mat-label>Contenido en Markdown</mat-label>
+            <textarea matInput rows="8" formControlName="texto_markdown" required 
+                     placeholder="Escribe el contenido en formato Markdown..."></textarea>
+            <mat-error *ngIf="contenidoForm.get('texto_markdown')?.hasError('required')">
+              El contenido es requerido
+            </mat-error>
+          </mat-form-field>
+        </form>
+      </mat-card-content>
+      <mat-card-actions align="end">
+        <button mat-button (click)="cancelContenidoForm()">Cancelar</button>
+        <button mat-raised-button color="primary" (click)="saveContenido()" [disabled]="!contenidoForm.valid">
+          {{ editingItem ? 'Actualizar' : 'Crear' }}
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <!-- Formulario de Ejercicio -->
+  <div class="form-overlay" *ngIf="showEjercicioForm" (click)="cancelEjercicioForm()">
+    <mat-card class="form-card large" (click)="$event.stopPropagation()">
+      <mat-card-header>
+        <mat-card-title>{{ editingItem ? 'Editar' : 'Crear' }} Ejercicio</mat-card-title>
+        <mat-card-subtitle *ngIf="selectedUnidad">Para: Unidad {{ selectedUnidad.numero }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="ejercicioForm" (ngSubmit)="saveEjercicio()">
+          <mat-form-field class="full-width">
+            <mat-label>Enunciado del Ejercicio</mat-label>
+            <textarea matInput rows="4" formControlName="enunciado" required 
+                     placeholder="Describe el ejercicio o pregunta..."></textarea>
+            <mat-error *ngIf="ejercicioForm.get('enunciado')?.hasError('required')">
+              El enunciado es requerido
+            </mat-error>
+          </mat-form-field>
+          
+          <mat-form-field class="full-width">
+            <mat-label>Respuesta Correcta</mat-label>
+            <textarea matInput rows="2" formControlName="respuesta_correcta" required></textarea>
+            <mat-error *ngIf="ejercicioForm.get('respuesta_correcta')?.hasError('required')">
+              La respuesta correcta es requerida
+            </mat-error>
+          </mat-form-field>
+          
+          <div class="form-row">
+            <mat-form-field class="half-width">
+              <mat-label>Tipo de Ejercicio</mat-label>
+              <mat-select formControlName="tipo">
+                <mat-option *ngFor="let tipo of getTiposEjercicio()" [value]="tipo">
+                  {{ tipo | titlecase }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            
+            <mat-form-field class="half-width">
+              <mat-label>Dificultad</mat-label>
+              <mat-select formControlName="dificultad">
+                <mat-option *ngFor="let dificultad of getDificultades()" [value]="dificultad">
+                  {{ dificultad | titlecase }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          
+          <mat-form-field class="full-width" *ngIf="ejercicioForm.get('tipo')?.value === 'multiple_choice'">
+            <mat-label>Opciones (separadas por comas)</mat-label>
+            <textarea matInput rows="2" formControlName="opciones" 
+                     placeholder="Opción 1, Opción 2, Opción 3, ..."></textarea>
+            <mat-hint>Solo para ejercicios de opción múltiple</mat-hint>
+          </mat-form-field>
+        </form>
+      </mat-card-content>
+      <mat-card-actions align="end">
+        <button mat-button (click)="cancelEjercicioForm()">Cancelar</button>
+        <button mat-raised-button color="primary" (click)="saveEjercicio()" [disabled]="!ejercicioForm.valid">
+          {{ editingItem ? 'Actualizar' : 'Crear' }}
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+<!-- Floating Action Button -->
+<button mat-fab class="fab-main" color="primary" matTooltip="Acciones rápidas">
+  <mat-icon>add</mat-icon>
+</button>
